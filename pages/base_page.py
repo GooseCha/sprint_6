@@ -19,7 +19,7 @@ class BasePage:
         locator = (By.XPATH, f"//div[@class='accordion__button' and text()='{question_text}']")
         element = WebDriverWait(self.driver, 10).until(expected_conditions.element_to_be_clickable(locator))
         self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
-        self.driver.find_element(*locator).click()
+        self.driver.execute_script("arguments[0].click();", element)
 
     def get_answer_text(self, answer_id):
         locator = (By.ID, f"accordion__panel-{answer_id}")

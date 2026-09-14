@@ -32,6 +32,7 @@ class OrderPage:
         self.driver.find_element(*self.logo_yandex).click()
         WebDriverWait(self.driver, 10).until(lambda d: len(d.window_handles) == 2)  # Про команду, чтобы узнать количество страниц в браузере и как на них перейти узнал у ИИшки
         self.driver.switch_to.window(self.driver.window_handles[1])
+        WebDriverWait(self.driver, 10).until(lambda d: d.current_url != "about:blank")
 
     def click_scooter_logo(self):
         self.driver.find_element(*self.logo_scooter).click()
