@@ -1,34 +1,50 @@
-from selenium.webdriver.support import expected_conditions
+from selenium.common.exceptions import ElementClickInterceptedException, TimeoutException
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.common.by import By
+from selenium.common.exceptions import TimeoutException
 
 
 class BasePage:
-    URL = "https://qa-scooter.education-services.ru/"
-
-    order_button_header = [By.XPATH, "//div[@class='Header_Nav__AGCXC']/button[text()='Заказать']"]
-    order_button_home = [By.XPATH, "//div[@class='Home_FinishButton__1_cWm']/button[text()='Заказать']"]
-
     def __init__(self, driver):
         self.driver = driver
+        self.wait = WebDriverWait(driver, 10)
 
-    def open_site(self):
-        self.driver.get(self.URL)
+    def open(self, url):
+        self.driver.get(url)
 
-    def open_question(self, question_text):
-        locator = (By.XPATH, f"//div[@class='accordion__button' and text()='{question_text}']")
-        element = WebDriverWait(self.driver, 10).until(expected_conditions.element_to_be_clickable(locator))
+    def find(self, locator):
+        return self.wait.until(EC.presence_of_element_located(locator))
+
+    def click(self, locator):
+        try:
+            element = self.wait.until(EC.element_to_be_clickable(locator))
+        except TimeoutException:
+            raise AssertionError(f"Элемент не найден или не кликабелен: {locator}")
+
         self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
-        self.driver.execute_script("arguments[0].click();", element)
 
-    def get_answer_text(self, answer_id):
-        locator = (By.ID, f"accordion__panel-{answer_id}")
-        answer = WebDriverWait(self.driver, 3).until(expected_conditions.visibility_of_element_located(locator))
-        return answer.text
+        try:
+            element.click()
+        except ElementClickInterceptedException:
+            self.driver.execute_script("arguments[0].click();", element)
 
-    def order_button_header_click(self):
-        self.driver.find_element(*self.order_button_header).click()
+    def send_keys(self, locator, text):
+        self.find(locator).send_keys(text)
 
-    def order_button_home_click(self):
-        self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", self.driver.find_element(*self.order_button_home))
-        self.driver.find_element(*self.order_button_home).click()
+    def get_text(self, locator):
+        return self.wait.until(EC.visibility_of_element_located(locator)).text
+
+    def get_current_url(self):
+        return self.driver.current_url
+
+    def switch_to_new_window(self):
+        self.wait.until(lambda d: len(d.window_handles) == 2)
+        self.driver.switch_to.window(self.driver.window_handles[1])
+        self.wait.until(lambda d: d.current_url != "about:blank")
+
+    def is_element_present(self, locator, timeout=10):
+        try:
+            WebDriverWait(self.driver, timeout).until(EC.visibility_of_element_located(locator))
+            return True
+        except TimeoutException:
+            return False

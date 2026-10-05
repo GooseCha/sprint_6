@@ -1,9 +1,11 @@
 import pytest
-from pages.base_page import BasePage
+import allure
+from pages.main_page import MainPage
 from pages.order_page import OrderPage
 
 
 class TestBasePage:
+    @allure.title("Проверка раскрытия вопроса FAQ: {question_text}")
     @pytest.mark.parametrize(
         "question_text, answer_id, answer_text",
         [
@@ -18,7 +20,7 @@ class TestBasePage:
         ],
     )
     def test_faq_opens_success(self, driver, question_text, answer_id, answer_text):
-        page = BasePage(driver)
+        page = MainPage(driver)
 
         page.open_site()
         page.open_question(question_text)

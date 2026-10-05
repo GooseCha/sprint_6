@@ -1,41 +1,57 @@
-from selenium.webdriver.support import expected_conditions
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.common.by import By
+import allure
+from pages.base_page import BasePage
+from locators.order_page_locators import OrderPageLocators
 
 
-class OrderPage:
-    URL = "https://qa-scooter.education-services.ru/"
-
-    name_field = [By.CSS_SELECTOR, "input[placeholder='* Имя']"]
-    surname_field = [By.CSS_SELECTOR, "input[placeholder='* Фамилия']"]
-    address_field = [By.CSS_SELECTOR, "input[placeholder='* Адрес: куда привезти заказ']"]
-    metro_field = [By.CSS_SELECTOR, "input[placeholder='* Станция метро']"]
-    metro_station = [By.CLASS_NAME, "select-search__row"]
-    phone_field = [By.CSS_SELECTOR, "input[placeholder='* Телефон: на него позвонит курьер']"]
-    logo_yandex = [By.CLASS_NAME, "Header_LogoYandex__3TSOI"]
-    logo_scooter = [By.CLASS_NAME, "Header_LogoScooter__3lsAR"]
-
-    def __init__(self, driver):
-        self.driver = driver
-
+class OrderPage(BasePage):
+    @allure.step("Выбрать станцию метро на странице заказа")
     def metro(self):
-        self.driver.find_element(*self.metro_field).click()
-        self.driver.find_element(*self.metro_station).click()
+        self.click(OrderPageLocators.METRO_FIELD)
+        self.click(OrderPageLocators.METRO_STATION)
 
+    @allure.step("Заполнить поля 'Имя', 'Фамилия', 'Адрес', 'Телефон' в форме заказа")
     def order_fulfill(self, name, surname, address, phone):
-        self.driver.find_element(*self.name_field).send_keys(f"{name}")
-        self.driver.find_element(*self.surname_field).send_keys(f"{surname}")
-        self.driver.find_element(*self.address_field).send_keys(f"{address}")
-        self.driver.find_element(*self.phone_field).send_keys(f"{phone}")
+        self.send_keys(OrderPageLocators.NAME_FIELD, name)
+        self.send_keys(OrderPageLocators.SURNAME_FIELD, surname)
+        self.send_keys(OrderPageLocators.ADDRESS_FIELD, address)
+        self.send_keys(OrderPageLocators.PHONE_FIELD, phone)
 
+    @allure.step("Нажать на надпись 'Яндекс' в лого")
     def click_yandex_logo(self):
-        self.driver.find_element(*self.logo_yandex).click()
-        WebDriverWait(self.driver, 10).until(lambda d: len(d.window_handles) == 2)  # Про команду, чтобы узнать количество страниц в браузере и как на них перейти узнал у ИИшки
-        self.driver.switch_to.window(self.driver.window_handles[1])
-        WebDriverWait(self.driver, 10).until(lambda d: d.current_url != "about:blank")
+        self.click(OrderPageLocators.LOGO_YANDEX)
+        self.switch_to_new_window()
 
+    @allure.step("Нажать на надпись 'Самокат' в лого")
     def click_scooter_logo(self):
-        self.driver.find_element(*self.logo_scooter).click()
+        self.click(OrderPageLocators.LOGO_SCOOTER)
 
-    def get_current_url(self):
-        return self.driver.current_url
+    @allure.step("Нажать на кнопку 'Далее' на странице заказа")
+    def click_next_order_button(self):
+        self.click(OrderPageLocators.NEXT_ORDER_BUTTON)
+
+    @allure.step("Выбрать дату доставки: 15-е число следующего месяца")
+    def select_delivery_date(self):
+        self.click(OrderPageLocators.WHEN_TO_GET_SCOOTER_FIELD)
+        self.click(OrderPageLocators.NEXT_MONTH_BUTTON)
+        self.click(OrderPageLocators.DAY_15)
+
+    @allure.step("Выбрать срок аренды")
+    def select_rent_time(self):
+        self.click(OrderPageLocators.RENT_TIME_FIELD)
+        self.click(OrderPageLocators.RENTAL_PERIOD_OPTION)
+
+    @allure.step("Выбрать цвет самоката черный")
+    def select_scooter_color(self):
+        self.click(OrderPageLocators.COLOR_BLACK_CHECKBOX)
+
+    @allure.step("Нажать кнопку завершения заказа")
+    def click_finish_order_button(self):
+        self.click(OrderPageLocators.FINISH_ORDER_BUTTON)
+
+    @allure.step("Подтвердить завершение заказа")
+    def click_confirm_finish_order_button(self):
+        self.click(OrderPageLocators.CONFIRM_FINISH_ORDER_BUTTON)
+
+    @allure.step("Проверить, что появилось сообщение 'Заказ оформлен'")
+    def is_order_success_displayed(self):
+        return self.is_element_present(OrderPageLocators.ORDER_SUCCESS_HEADER)
